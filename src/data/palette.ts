@@ -1,4 +1,5 @@
 import type { BeadColor, GenerationSettings } from "../types";
+import { DEFAULT_DEVICE_PROFILE_ID } from "./devices";
 
 const color = (
   code: string,
@@ -65,5 +66,6 @@ export const DEFAULT_SETTINGS: GenerationSettings = {
   fitMode: "cover",
   boardSize: 29,
   beadPitchMm: 5,
+  deviceProfileId: DEFAULT_DEVICE_PROFILE_ID,
+  cellLabelMode: "code",
 };
-

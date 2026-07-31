@@ -10,6 +10,11 @@ const escapeXml = (value: string) => value
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;");
 
+const readableInk = (color: BeadColor) => {
+  const [red, green, blue] = color.rgb;
+  return red * .299 + green * .587 + blue * .114 < 126 ? "#ffffff" : "#172023";
+};
+
 export const symbolFor = (order: number): string => {
   const symbols = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   return symbols[order] ?? String(order + 1);
@@ -43,17 +48,18 @@ export function patternSvg(snapshot: ProjectSnapshot): string {
   const { pattern, palette } = snapshot;
   const cell = 18;
   const margin = 34;
+  const coordinateBand = 24;
   const legendWidth = 250;
   const artWidth = pattern.width * cell;
   const artHeight = pattern.height * cell;
-  const width = margin * 2 + artWidth + legendWidth;
-  const height = Math.max(margin * 2 + artHeight, 180 + pattern.usage.length * 30);
+  const width = margin * 2 + coordinateBand * 2 + artWidth + legendWidth;
+  const height = Math.max(margin * 2 + coordinateBand * 2 + artHeight, 180 + pattern.usage.length * 30);
   const selectedOrder = new Map(pattern.selectedPaletteIndices.map((index, order) => [index, order]));
   const pieces: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
     `<rect width="100%" height="100%" fill="#ffffff"/>`,
     `<text x="${margin}" y="24" font-family="sans-serif" font-size="16" font-weight="600" fill="#1f2527">${escapeXml(snapshot.name)}</text>`,
-    `<g transform="translate(${margin} ${margin})">`,
+    `<g transform="translate(${margin + coordinateBand} ${margin + coordinateBand})">`,
     `<rect x="0" y="0" width="${artWidth}" height="${artHeight}" fill="#f3f5f4" stroke="#273033" stroke-width="2"/>`,
   ];
   for (let y = 0; y < pattern.height; y += 1) {
@@ -66,10 +72,12 @@ export function patternSvg(snapshot: ProjectSnapshot): string {
         continue;
       }
       const color = palette[paletteIndex];
-      const symbol = symbolFor(selectedOrder.get(paletteIndex) ?? 0);
+      const label = snapshot.settings.cellLabelMode === "code"
+        ? color.code
+        : symbolFor(selectedOrder.get(paletteIndex) ?? 0);
       pieces.push(
         `<rect x="${px}" y="${py}" width="${cell}" height="${cell}" fill="${escapeXml(color.hex)}" stroke="#ffffff" stroke-opacity=".32"/>`,
-        `<text x="${px + cell / 2}" y="${py + 12.5}" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="600" fill="#172023">${escapeXml(symbol)}</text>`,
+        `<text x="${px + cell / 2}" y="${py + 12.2}" text-anchor="middle" font-family="sans-serif" font-size="${label.length > 2 ? 6.2 : 8}" font-weight="700" fill="${readableInk(color)}">${escapeXml(label)}</text>`,
       );
     }
   }
@@ -79,8 +87,24 @@ export function patternSvg(snapshot: ProjectSnapshot): string {
   for (let y = pattern.metrics.boardSize; y < pattern.height; y += pattern.metrics.boardSize) {
     pieces.push(`<line x1="0" y1="${y * cell}" x2="${artWidth}" y2="${y * cell}" stroke="#20282b" stroke-width="3"/>`);
   }
+  for (let x = 0; x < pattern.width; x += 1) {
+    if (x !== 0 && (x + 1) % 5 !== 0 && x !== pattern.width - 1) continue;
+    const center = x * cell + cell / 2;
+    pieces.push(
+      `<text x="${center}" y="-8" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#4e5956">${x + 1}</text>`,
+      `<text x="${center}" y="${artHeight + 15}" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#4e5956">${x + 1}</text>`,
+    );
+  }
+  for (let y = 0; y < pattern.height; y += 1) {
+    if (y !== 0 && (y + 1) % 5 !== 0 && y !== pattern.height - 1) continue;
+    const center = y * cell + cell / 2 + 3;
+    pieces.push(
+      `<text x="-10" y="${center}" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#4e5956">${y + 1}</text>`,
+      `<text x="${artWidth + 12}" y="${center}" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#4e5956">${y + 1}</text>`,
+    );
+  }
   pieces.push("</g>");
-  const legendX = margin * 2 + artWidth;
+  const legendX = margin * 2 + coordinateBand * 2 + artWidth;
   pieces.push(
     `<text x="${legendX}" y="${margin + 4}" font-family="sans-serif" font-size="15" font-weight="600" fill="#1f2527">材料清单</text>`,
     `<text x="${legendX}" y="${margin + 28}" font-family="sans-serif" font-size="11" fill="#667176">${pattern.width} × ${pattern.height} · ${pattern.metrics.totalBeads} 颗 · ${pattern.metrics.boardsAcross} × ${pattern.metrics.boardsDown} 板</text>`,
@@ -127,4 +151,3 @@ export async function saveTextExport(
   URL.revokeObjectURL(url);
   return true;
 }
-

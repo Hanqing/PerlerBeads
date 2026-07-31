@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { BoardCanvas } from "./components/BoardCanvas";
 import { PrintSheet } from "./components/PrintSheet";
+import { applyDeviceProfile, DEVICE_PROFILES, getDeviceProfile } from "./data/devices";
 import { DEFAULT_PALETTE, DEFAULT_SETTINGS } from "./data/palette";
 import { generatePattern } from "./lib/api";
 import { createDemoPattern } from "./lib/demo";
@@ -74,6 +75,7 @@ const fileToDataUrl = (file: File): Promise<string> => new Promise((resolve, rej
 export function App() {
   const initial = useMemo(loadPreferences, []);
   const [settings, setSettings] = useState<GenerationSettings>(initial.settings);
+  const [patternSettings, setPatternSettings] = useState<GenerationSettings | null>(null);
   const [palette, setPalette] = useState<BeadColor[]>(initial.palette);
   const [pattern, setPattern] = useState<PatternResult | null>(null);
   const [sourceData, setSourceData] = useState<string | null>(null);
@@ -120,6 +122,7 @@ export function App() {
     try {
       const result = await generatePattern({ imageBase64, settings: nextSettings, palette: nextPalette });
       setPattern(result);
+      setPatternSettings(nextSettings);
       setCompleted(new Set());
       setBoardIndex(0);
       setSelectedColor(result.usage[0]?.paletteIndex ?? null);
@@ -152,6 +155,7 @@ export function App() {
     setSourceData(null);
     setProjectName("橘猫肖像示例");
     setPattern(result);
+    setPatternSettings(DEFAULT_SETTINGS);
     setCompleted(new Set());
     setBoardIndex(0);
     setSelectedColor(result.usage[0]?.paletteIndex ?? null);
@@ -186,12 +190,15 @@ export function App() {
     (sum, region) => sum + region.cells.filter((cell) => completed.has(cell)).length,
     0,
   );
+  const effectivePatternSettings: GenerationSettings = patternSettings
+    ? { ...patternSettings, cellLabelMode: settings.cellLabelMode }
+    : settings;
 
   const snapshot = (): ProjectSnapshot | null => pattern ? {
     version: 1,
     name: projectName,
     createdAt: new Date().toISOString(),
-    settings,
+    settings: effectivePatternSettings,
     palette,
     pattern,
     completedCells: [...completed],
@@ -219,7 +226,7 @@ export function App() {
       if (selectedColor === null) return;
       const cells = [...pattern.cells];
       cells[globalIndex] = selectedColor;
-      setPattern(recalculatePattern({ ...pattern, cells }, palette, settings));
+      setPattern(recalculatePattern({ ...pattern, cells }, palette, effectivePatternSettings));
       return;
     }
     setCompleted((current) => {
@@ -328,7 +335,7 @@ export function App() {
             /> : <div className="empty-state">
               <span className="empty-mark"><Sparkles size={26} /></span>
               <h1>把图片变成可直接开拼的图纸</h1>
-              <p>图片只在本机处理。支持透明背景、品牌色板、库存约束和 29 × 29 自动分板。</p>
+              <p>图片只在本机处理。支持设备预设、透明背景、品牌色板、库存约束和自动分板。</p>
               <div className="empty-actions">
                 <button className="primary-button" type="button" onClick={() => fileInput.current?.click()}><ImagePlus size={17} />选择图片</button>
                 <button className="secondary-button" type="button" onClick={loadDemo}><WandSparkles size={17} />载入示例</button>
@@ -393,7 +400,7 @@ export function App() {
       {error && <div className="error-toast" role="alert"><TriangleAlert size={16} />{error}<button type="button" onClick={() => setError(null)}>关闭</button></div>}
       {notice && <div className="notice-toast" role="status"><Check size={16} />{notice}</div>}
     </div>
-    <PrintSheet name={projectName} pattern={pattern} palette={palette} />
+    <PrintSheet name={projectName} pattern={pattern} palette={palette} settings={effectivePatternSettings} />
   </>;
 }
 
@@ -411,10 +418,24 @@ interface ProjectInspectorProps {
 function ProjectInspector({ sourceData, settings, setSettings, busy, hasPattern, onChooseImage, onGenerate, onDemo }: ProjectInspectorProps) {
   const update = <Key extends keyof GenerationSettings>(key: Key, value: GenerationSettings[Key]) =>
     setSettings((current) => ({ ...current, [key]: value }));
-  const presets = [29, 58, 87];
+  const device = getDeviceProfile(settings.deviceProfileId);
+  const presets = [1, 2, 3].map((boards) => settings.boardSize * boards);
   return <>
     <div className="inspector-heading"><div><span>PROJECT</span><h2>项目与生成</h2></div><span className="status-badge">本地处理</span></div>
     {sourceData ? <div className="source-preview"><img src={sourceData} alt="当前原图" /><button type="button" onClick={onChooseImage}><Upload size={14} />更换图片</button></div> : <button className="source-drop" type="button" onClick={onChooseImage}><ImagePlus size={22} /><strong>选择图片</strong><span>PNG · JPG · WebP · GIF</span></button>}
+    <div className="section-title"><span>设备与底板</span><span>{device.beadDiameterMm} mm</span></div>
+    <label className="select-field">设备配置<select
+      value={device.id}
+      onChange={(event) => {
+        const next = getDeviceProfile(event.target.value);
+        setSettings((current) => applyDeviceProfile(current, next));
+      }}
+    >{DEVICE_PROFILES.map((profile) => <option value={profile.id} key={profile.id}>{profile.brand} · {profile.name}</option>)}</select></label>
+    <div className="device-summary">
+      <strong>{device.boardSize} × {device.boardSize} 钉 · {device.pegPitchMm} mm 节距</strong>
+      <span>单板拼图区约 {device.boardSize * device.pegPitchMm} × {device.boardSize * device.pegPitchMm} mm{device.linkable ? " · 可连接" : ""}</span>
+      <small>{device.note}</small>
+    </div>
     <div className="section-title"><span>图案尺寸</span><span>{settings.width} × {settings.height}</span></div>
     <div className="preset-row">{presets.map((size) => <button type="button" className={settings.width === size && settings.height === size ? "preset is-active" : "preset"} key={size} onClick={() => setSettings((current) => ({ ...current, width: size, height: size }))}>{size}</button>)}</div>
     <div className="field-pair">
@@ -422,6 +443,7 @@ function ProjectInspector({ sourceData, settings, setSettings, busy, hasPattern,
       <label>高<input type="number" min="8" max="300" value={settings.height} onChange={(event) => update("height", Math.max(8, Number(event.target.value)))} /></label>
     </div>
     <label className="select-field">适配方式<select value={settings.fitMode} onChange={(event) => update("fitMode", event.target.value as GenerationSettings["fitMode"])}><option value="cover">填满裁切</option><option value="contain">完整留白</option><option value="stretch">拉伸</option></select></label>
+    <label className="select-field">图纸格内标注<select value={settings.cellLabelMode} onChange={(event) => update("cellLabelMode", event.target.value as GenerationSettings["cellLabelMode"])}><option value="code">实际色号（推荐）</option><option value="symbol">简写符号</option></select></label>
     <label className="range-field"><span>颜色上限 <strong>{settings.maxColors} 色</strong></span><input type="range" min="4" max={Math.min(40, DEFAULT_PALETTE.length)} value={settings.maxColors} onChange={(event) => update("maxColors", Number(event.target.value))} /></label>
     <label className="range-field"><span>零散点清理 <strong>{["关闭", "适中", "强"][settings.cleanup]}</strong></span><input type="range" min="0" max="2" value={settings.cleanup} onChange={(event) => update("cleanup", Number(event.target.value))} /></label>
     <label className="switch-row"><input type="checkbox" checked={settings.dithering} onChange={(event) => update("dithering", event.target.checked)} /><span><strong>渐变抖动</strong><small>更平滑，但会增加交错单豆</small></span></label>
@@ -509,4 +531,3 @@ function InventoryInspector({ palette, onChange }: InventoryInspectorProps) {
     </div>
   </>;
 }
-

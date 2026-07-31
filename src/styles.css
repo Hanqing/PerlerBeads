@@ -326,6 +326,19 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   border-radius: 7px;
 }
 .select-field { display: block; margin-top: 9px; }
+.device-summary {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 9px;
+  color: #dbe3e5;
+  background: #141a1b;
+  border: 1px solid #3e494d;
+  border-radius: 8px;
+}
+.device-summary strong { font-size: 11px; }
+.device-summary span { color: #b2bec1; font-size: 10px; }
+.device-summary small { color: var(--muted); font-size: 9px; line-height: 1.45; }
 .range-field { display: block; margin-top: 13px; }
 .range-field > span { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
 .range-field strong { color: #dbe3e5; font-weight: 600; }
@@ -447,6 +460,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .print-metrics span, .print-metrics strong { display: block; }
   .print-metrics span { color: #687471; font-size: 9pt; }
   .print-metrics strong { margin-top: 2mm; font-size: 14pt; }
+  .print-device-note { display: flex; justify-content: space-between; gap: 5mm; margin-top: 4mm; padding: 3mm 4mm; color: #485451; font-size: 8pt; background: #f7f8f7; border-left: 1mm solid #52605d; }
+  .print-device-note strong, .print-device-note span { display: block; }
   .print-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
   .print-table th, .print-table td { padding: 2.2mm 2mm; text-align: left; border-bottom: .25mm solid #d9dfdd; }
   .print-table th { color: #66716f; font-weight: 600; }
@@ -457,7 +472,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .print-board header > div span { color: #687471; font-size: 8pt; }
   .print-board header > div strong { font-size: 18pt; }
   .print-board header p, .print-board header > span { font-size: 9pt; }
-  .print-board-svg { display: block; width: 165mm; height: 165mm; margin: 9mm auto 5mm; }
+  .print-board-svg { display: block; max-width: 100%; margin: 7mm auto 4mm; }
   .print-ruler { display: flex; align-items: center; justify-content: center; gap: 3mm; color: #4d5856; font-size: 8pt; }
   .print-ruler i { display: block; width: 50mm; height: 2mm; border: .3mm solid #252c2d; border-top: 0; }
+  .print-board-note { margin: 4mm 0 0; color: #687471; font-size: 8pt; text-align: center; }
 }

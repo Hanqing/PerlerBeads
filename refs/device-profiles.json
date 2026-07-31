@@ -1,0 +1,68 @@
+{
+  "updatedAt": "2026-07-31",
+  "measurement": "boardSize * pegPitchMm is the theoretical peg-center work area, not the plastic shell size",
+  "profiles": [
+    {
+      "id": "generic-midi-29",
+      "brand": "Generic",
+      "name": "Generic Midi 29x29 compatibility profile; measurement pending",
+      "beadDiameterMm": 5,
+      "pegPitchMm": 5,
+      "boardSize": 29,
+      "linkable": false,
+      "evidence": ["拼豆设备 2.jpg", "拼豆设备 3.jpg"],
+      "confidence": "observed-workflow; brand-unconfirmed"
+    },
+    {
+      "id": "hama-midi-29",
+      "brand": "Hama",
+      "name": "Midi large square",
+      "beadDiameterMm": 5,
+      "pegPitchMm": 5,
+      "boardSize": 29,
+      "linkable": true,
+      "source": "https://hama.dk/en/products/midi-pegboard-large-square"
+    },
+    {
+      "id": "perler-standard-29",
+      "brand": "Perler",
+      "name": "Standard large clear square",
+      "beadDiameterMm": 5,
+      "pegPitchMm": 5,
+      "boardSize": 29,
+      "linkable": true,
+      "source": "https://perler.com/products/large-clear-square-pegboards-4-ct",
+      "confidence": "29x29 implementation compatibility; calibrate against physical board"
+    },
+    {
+      "id": "artkal-midi-29",
+      "brand": "Artkal",
+      "name": "Midi clear square",
+      "beadDiameterMm": 5,
+      "pegPitchMm": 5,
+      "boardSize": 29,
+      "linkable": true,
+      "source": "https://www.artkalbead.com/pegboard/"
+    },
+    {
+      "id": "hama-mini-57",
+      "brand": "Hama",
+      "name": "Mini large square",
+      "beadDiameterMm": 2.5,
+      "pegPitchMm": 2.5,
+      "boardSize": 57,
+      "linkable": false,
+      "source": "https://hama.dk/en/products/mini-pegboard-large-square"
+    },
+    {
+      "id": "hama-maxi-16",
+      "brand": "Hama",
+      "name": "Maxi large square",
+      "beadDiameterMm": 10,
+      "pegPitchMm": 10,
+      "boardSize": 16,
+      "linkable": false,
+      "source": "https://hama.dk/en/products/maxi-pegboard-large-square"
+    }
+  ]
+}

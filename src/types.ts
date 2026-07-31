@@ -1,5 +1,19 @@
 export type FitMode = "cover" | "contain" | "stretch";
+export type CellLabelMode = "code" | "symbol";
 export type WorkspaceTool = "project" | "edit" | "build" | "inventory";
+
+export interface DeviceProfile {
+  id: string;
+  brand: string;
+  name: string;
+  beadDiameterMm: number;
+  pegPitchMm: number;
+  boardSize: number;
+  linkable: boolean;
+  sourceKind: "reference" | "official";
+  sourceUrl?: string;
+  note: string;
+}
 
 export interface GenerationSettings {
   width: number;
@@ -12,6 +26,8 @@ export interface GenerationSettings {
   fitMode: FitMode;
   boardSize: number;
   beadPitchMm: number;
+  deviceProfileId: string;
+  cellLabelMode: CellLabelMode;
 }
 
 export interface BeadColor {
@@ -77,4 +93,3 @@ export interface ColorRegion {
   id: number;
   cells: number[];
 }
-
