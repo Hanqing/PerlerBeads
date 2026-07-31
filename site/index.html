@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0d0d" />
+    <meta name="description" content="BeadGrid 是一款把图片变成可施工拼豆图纸的离线桌面工作台。配色、分板、库存和打印，一次完成。" />
+    <meta property="og:title" content="BeadGrid · 拼豆图纸工作台" />
+    <meta property="og:description" content="把每一颗像素，变成可以亲手完成的作品。" />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d0d'/%3E%3Ccircle cx='20' cy='20' r='8' fill='%23ffad4d'/%3E%3Ccircle cx='44' cy='20' r='8' fill='%236cc9bf'/%3E%3Ccircle cx='20' cy='44' r='8' fill='%23e26f5c'/%3E%3Ccircle cx='44' cy='44' r='8' fill='%23f0e4ca'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>BeadGrid · 把图片变成可施工的拼豆图纸</title>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="BeadGrid 首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>BEADGRID</span>
+      </a>
+      <nav aria-label="主导航">
+        <a href="#why">为什么</a>
+        <a href="#workflow">工作流</a>
+        <a href="#details">图纸信息</a>
+      </nav>
+      <a class="header-github github-link" href="https://github.com/Hanqing/PerlerBeads" target="_blank" rel="noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2.2c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.3-5.27-1.29-5.27-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.39-5.28 5.68.42.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .8Z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="hero-copy">
+          <div class="eyebrow reveal"><span class="pulse"></span>离线桌面拼豆工作台 · v0.1</div>
+          <h1 class="reveal"><span>把每一颗像素，</span><span>变成可以亲手完成的<span class="marker">作品。</span></span></h1>
+          <p class="hero-lead reveal">不止把图片像素化。BeadGrid 会替你完成配色、分板、用量、库存和施工标注，让灵感直接抵达熨烫台。</p>
+          <div class="hero-actions reveal">
+            <a class="button button-primary download-link" href="https://github.com/Hanqing/PerlerBeads/releases/latest/download/BeadGrid_0.1.0_aarch64.dmg">
+              <span>下载 macOS 版</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14"/></svg>
+            </a>
+            <a class="button button-quiet github-link" href="https://github.com/Hanqing/PerlerBeads" target="_blank" rel="noreferrer">查看源代码 <span>↗</span></a>
+          </div>
+          <div class="hero-notes reveal">
+            <span><i>✓</i> 图片完全本机处理</span>
+            <span><i>✓</i> 无需账户</span>
+            <span><i>✓</i> 开放源码</span>
+          </div>
+        </div>
+
+        <div class="product-orbit reveal" id="product-orbit">
+          <div class="orbit-tag tag-a"><strong>1,442</strong><span>颗拼豆</span></div>
+          <div class="orbit-tag tag-b"><strong>4</strong><span>块底板</span></div>
+          <div class="orbit-tag tag-c"><strong>ΔE 2.1</strong><span>平均色差</span></div>
+          <div class="app-window" id="app-window">
+            <div class="window-bar">
+              <div class="window-dots"><i></i><i></i><i></i></div>
+              <div class="window-title">橘猫肖像 / 板 A1</div>
+              <span class="window-status">已保存</span>
+            </div>
+            <div class="window-body">
+              <aside class="mock-rail" aria-hidden="true"><span>⌂</span><span>▦</span><span class="active">◉</span><span>◇</span></aside>
+              <div class="board-stage">
+                <div class="board-meta"><span>板 A1</span><span>29 × 29</span></div>
+                <canvas id="hero-board" width="696" height="696" aria-label="交互式橘猫拼豆图案"></canvas>
+                <div class="palette" aria-label="点击聚焦颜色">
+                  <button class="color-chip is-active" data-color="all" aria-label="显示全部颜色"><i class="rainbow"></i><span>全部</span></button>
+                  <button class="color-chip" data-color="orange" aria-label="聚焦橙色"><i style="--chip:#ed914e"></i><span>S10</span></button>
+                  <button class="color-chip" data-color="cream" aria-label="聚焦奶油色"><i style="--chip:#f1dfbd"></i><span>S02</span></button>
+                  <button class="color-chip" data-color="brown" aria-label="聚焦棕色"><i style="--chip:#5f463e"></i><span>S05</span></button>
+                  <button class="color-chip" data-color="mint" aria-label="聚焦薄荷色"><i style="--chip:#72a778"></i><span>S22</span></button>
+                </div>
+              </div>
+              <aside class="build-panel">
+                <span class="panel-kicker">BUILD</span>
+                <h3>摆放队列</h3>
+                <div class="selected-bead"><i></i><div><strong>S10 橙色</strong><small>剩余 436 / 594 颗</small></div></div>
+                <div class="task done"><i>✓</i><span>区域 01</span><b>158</b></div>
+                <div class="task"><i></i><span>区域 02</span><b>34</b></div>
+                <div class="task"><i></i><span>区域 03</span><b>12</b></div>
+                <div class="mini-progress"><span style="--progress:27%"></span></div>
+                <small>已完成 158 / 594 · 27%</small>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ticker" aria-label="功能概览">
+        <div class="ticker-track">
+          <span>CIEDE2000 配色</span><i></i><span>29 × 29 自动分板</span><i></i><span>库存约束</span><i></i><span>透明背景</span><i></i><span>施工队列</span><i></i><span>SVG / CSV / PDF</span><i></i>
+          <span>CIEDE2000 配色</span><i></i><span>29 × 29 自动分板</span><i></i><span>库存约束</span><i></i><span>透明背景</span><i></i><span>施工队列</span><i></i><span>SVG / CSV / PDF</span><i></i>
+        </div>
+      </section>
+
+      <section class="why section-shell" id="why">
+        <div class="section-heading reveal">
+          <span class="section-index">01 / WHY</span>
+          <h2>像素化只占整个过程的<br /><em>第一分钟。</em></h2>
+          <p>真正麻烦的是之后：颜色怎么买、板子怎么分、做到哪了、打印会不会缩放。BeadGrid 把这些脏活一起做完。</p>
+        </div>
+        <div class="compare-grid">
+          <article class="compare-card muted-card reveal">
+            <span class="card-label">普通转换器</span>
+            <div class="messy-stack" aria-hidden="true">
+              <div class="paper paper-a">色号？<br /><small>凭感觉找相近色</small></div>
+              <div class="paper paper-b">第几块板？<br /><small>手动截图分割</small></div>
+              <div class="paper paper-c">还差多少？<br /><small>重新数一遍…</small></div>
+            </div>
+            <h3>给你一张像素图，<br />剩下的自己想办法。</h3>
+          </article>
+          <article class="compare-card bright-card reveal">
+            <span class="card-label">BeadGrid</span>
+            <div class="answer-grid">
+              <div><span>底板</span><strong>2 × 2</strong><small>A1—B2</small></div>
+              <div><span>颜色</span><strong>6</strong><small>已匹配色号</small></div>
+              <div><span>总量</span><strong>1,442</strong><small>颗</small></div>
+              <div><span>缺料</span><strong>0</strong><small>库存充足</small></div>
+            </div>
+            <h3>从图片到开工，<br />所有答案都在一处。</h3>
+          </article>
+        </div>
+      </section>
+
+      <section class="lab section-shell" id="workflow">
+        <div class="section-heading compact reveal">
+          <span class="section-index">02 / COLOR LAB</span>
+          <h2>不是“看起来差不多”，<br />是<em>算出来更接近。</em></h2>
+        </div>
+        <div class="lab-console reveal">
+          <div class="lab-sidebar">
+            <span>最大颜色数</span>
+            <div class="segment-control" role="group" aria-label="模拟颜色数量">
+              <button data-detail="low">8</button>
+              <button class="is-active" data-detail="medium">16</button>
+              <button data-detail="high">24</button>
+            </div>
+            <label><span>孤立像素清理</span><input type="checkbox" checked /></label>
+            <label><span>遵守现有库存</span><input type="checkbox" checked /></label>
+            <label><span>Floyd–Steinberg</span><input type="checkbox" /></label>
+            <div class="algorithm-note"><span>ΔE00</span><p>在 Lab 色彩空间中衡量人眼实际感知的颜色差异。</p></div>
+          </div>
+          <div class="lab-visual">
+            <div class="source-orb"><span>原图采样</span></div>
+            <div class="transform-line"><i></i><i></i><i></i><span>线性光取样</span></div>
+            <div class="match-list">
+              <span class="match-title">候选颜色 / 色差</span>
+              <div><i style="--match:#ed914e"></i><b>S10 橙色</b><em>2.14</em><strong>最佳</strong></div>
+              <div><i style="--match:#d57248"></i><b>S17 珊瑚</b><em>4.87</em></div>
+              <div><i style="--match:#b86c42"></i><b>S31 赤褐</b><em>7.02</em></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bento section-shell" id="details">
+        <div class="section-heading reveal">
+          <span class="section-index">03 / ONE WORKSPACE</span>
+          <h2>图案是一张图，<br />图纸是<em>一整套信息。</em></h2>
+        </div>
+        <div class="bento-grid">
+          <article class="bento-card board-card reveal">
+            <div class="bento-copy"><span>自动分板</span><h3>再大的作品，<br />也知道从哪块开始。</h3><p>按标准 29×29 底板拆分，保留全局坐标与板号。</p></div>
+            <div class="mini-boards" aria-hidden="true"><i>A1</i><i>A2</i><i>B1</i><i>B2</i></div>
+          </article>
+          <article class="bento-card inventory-card reveal">
+            <div class="bento-copy"><span>库存感知</span><h3>开工之前，<br />先知道够不够。</h3></div>
+            <div class="inventory-list">
+              <div><i style="--bead:#ed914e"></i><span>S10</span><b>594</b><em>700</em></div>
+              <div><i style="--bead:#f1dfbd"></i><span>S02</span><b>348</b><em>500</em></div>
+              <div><i style="--bead:#e8a4aa"></i><span>S13</span><b>224</b><em>180</em><strong>缺 44</strong></div>
+            </div>
+          </article>
+          <article class="bento-card queue-card reveal">
+            <div class="bento-copy"><span>施工模式</span><h3>把复杂图案，<br />拆成一个个可勾选任务。</h3></div>
+            <div class="queue-rings" aria-hidden="true"><i></i><i></i><i></i><span>67%</span></div>
+          </article>
+          <article class="bento-card export-card reveal">
+            <div class="bento-copy"><span>完整导出</span><h3>屏幕、打印、归档，<br />各有合适格式。</h3></div>
+            <div class="file-stack" aria-hidden="true"><i>SVG<small>坐标图纸</small></i><i>CSV<small>材料清单</small></i><i>JSON<small>工程存档</small></i><i>PDF<small>分板打印</small></i></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="steps section-shell">
+        <div class="section-heading compact reveal"><span class="section-index">04 / THREE STEPS</span><h2>从灵感到开工，<br /><em>三步。</em></h2></div>
+        <ol>
+          <li class="reveal"><span>01</span><div><strong>拖入图片</strong><p>PNG、JPG、WebP 或 GIF，透明背景会自动保留。</p></div></li>
+          <li class="reveal"><span>02</span><div><strong>调整方案</strong><p>选择尺寸、颜色数量、抖动与库存策略，实时生成。</p></div></li>
+          <li class="reveal"><span>03</span><div><strong>照着拼</strong><p>按板、颜色或连通区域施工，完成一块就勾掉一块。</p></div></li>
+        </ol>
+      </section>
+
+      <section class="final-cta section-shell reveal">
+        <div class="cta-beads" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="section-index">READY TO MAKE?</span>
+        <h2>下一张图片，<br />会变成什么？</h2>
+        <p>下载 BeadGrid，把它放进来看看。</p>
+        <div class="hero-actions">
+          <a class="button button-primary download-link" href="https://github.com/Hanqing/PerlerBeads/releases/latest/download/BeadGrid_0.1.0_aarch64.dmg">下载 macOS 版 <span>↓</span></a>
+          <button class="button button-quiet clone-button" type="button" data-command="git clone git@github.com:Hanqing/PerlerBeads.git">复制克隆命令</button>
+        </div>
+        <small>目前支持 Apple Silicon · Windows 构建即将提供</small>
+      </section>
+    </main>
+
+    <footer class="site-footer section-shell">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>BEADGRID</span></a>
+      <p>为认真对待每一颗拼豆的人制作。</p>
+      <div><a class="github-link" href="https://github.com/Hanqing/PerlerBeads">GitHub</a><span>© <b id="year"></b></span></div>
+    </footer>
+
+    <div class="toast" role="status" aria-live="polite">已复制到剪贴板</div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
