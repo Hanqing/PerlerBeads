@@ -1,7 +1,8 @@
+import { memo } from "react";
 import type { BeadColor, GenerationSettings, PatternResult } from "../types";
 import { getDeviceProfile } from "../data/devices";
 import { boardLabel, boardOrigin } from "../lib/pattern";
-import { symbolFor } from "../lib/export";
+import { readableInk, symbolFor } from "../lib/export";
 
 interface PrintSheetProps {
   name: string;
@@ -13,12 +14,7 @@ interface PrintSheetProps {
 const shouldShowCoordinate = (index: number, boardSize: number) =>
   index === 0 || (index + 1) % 5 === 0 || index === boardSize - 1;
 
-const readableInk = (color: BeadColor) => {
-  const [red, green, blue] = color.rgb;
-  return red * .299 + green * .587 + blue * .114 < 126 ? "#ffffff" : "#172023";
-};
-
-export function PrintSheet({ name, pattern, palette, settings }: PrintSheetProps) {
+export const PrintSheet = memo(function PrintSheet({ name, pattern, palette, settings }: PrintSheetProps) {
   if (!pattern) return null;
   const device = getDeviceProfile(settings.deviceProfileId);
   const symbolOrder = new Map(pattern.selectedPaletteIndices.map((index, order) => [index, order]));
@@ -127,4 +123,4 @@ export function PrintSheet({ name, pattern, palette, settings }: PrintSheetProps
       })}
     </div>
   );
-}
+});
