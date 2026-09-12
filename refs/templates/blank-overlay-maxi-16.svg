@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="176mm" height="190mm" viewBox="0 0 176 190">
   <title>BeadGrid blank 16 by 16 board, 10 mm pitch</title>
-  <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#fff" stroke="#aeb8b4" stroke-width=".2"/></pattern></defs>
+  <defs><pattern id="grid" x="8" y="8" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#fff" stroke="#aeb8b4" stroke-width=".2"/></pattern></defs>
   <rect width="176" height="190" fill="#fff"/>
   <text x="8" y="4" font-family="Arial,sans-serif" font-size="2.5" font-weight="700">MAXI 16 × 16 · 10 mm · PRINT AT 100%</text>
   <rect x="8" y="8" width="160" height="160" fill="url(#grid)" stroke="#20282b" stroke-width=".4"/>
