@@ -10,7 +10,7 @@ const escapeXml = (value: string) => value
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;");
 
-const readableInk = (color: BeadColor) => {
+export const readableInk = (color: BeadColor) => {
   const [red, green, blue] = color.rgb;
   return red * .299 + green * .587 + blue * .114 < 126 ? "#ffffff" : "#172023";
 };
@@ -114,7 +114,7 @@ export function patternSvg(snapshot: ProjectSnapshot): string {
     const y = margin + 58 + order * 30;
     pieces.push(
       `<circle cx="${legendX + 9}" cy="${y}" r="8" fill="${escapeXml(color.hex)}" stroke="#c3c9c7"/>`,
-      `<text x="${legendX + 9}" y="${y + 3}" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#172023">${escapeXml(symbolFor(order))}</text>`,
+      `<text x="${legendX + 9}" y="${y + 3}" text-anchor="middle" font-family="sans-serif" font-size="7" fill="${readableInk(color)}">${escapeXml(symbolFor(order))}</text>`,
       `<text x="${legendX + 25}" y="${y + 4}" font-family="sans-serif" font-size="11" fill="#1f2527">${escapeXml(color.code)} ${escapeXml(color.name)}</text>`,
       `<text x="${legendX + 205}" y="${y + 4}" text-anchor="end" font-family="sans-serif" font-size="11" fill="#1f2527">${entry.count}</text>`,
     );
