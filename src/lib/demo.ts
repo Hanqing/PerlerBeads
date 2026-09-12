@@ -1,10 +1,9 @@
 import { DEFAULT_SETTINGS } from "../data/palette";
-import type { BeadColor, PatternResult } from "../types";
+import type { BeadColor, GenerationSettings, PatternResult } from "../types";
 import { recalculatePattern } from "./pattern";
 
-export function createDemoPattern(palette: BeadColor[]): PatternResult {
-  const width = 58;
-  const height = 58;
+export function createDemoPattern(palette: BeadColor[], settings: GenerationSettings = DEFAULT_SETTINGS): PatternResult {
+  const { width, height } = settings;
   const cells: Array<number | null> = Array(width * height).fill(null);
   const closest = (code: string) => Math.max(0, palette.findIndex((item) => item.code === code));
   const ink = closest("S05");
@@ -14,8 +13,10 @@ export function createDemoPattern(palette: BeadColor[]): PatternResult {
   const pink = closest("S13");
   const green = closest("S22");
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
+  for (let row = 0; row < height; row += 1) {
+    for (let column = 0; column < width; column += 1) {
+      const x = Math.floor(column * 58 / width);
+      const y = Math.floor(row * 58 / height);
       const dx = x - 28.5;
       const dy = y - 31;
       const head = (dx * dx) / 430 + (dy * dy) / 340 <= 1;
@@ -34,7 +35,7 @@ export function createDemoPattern(palette: BeadColor[]): PatternResult {
       } else if ((x * 7 + y * 11) % 173 === 0) {
         bead = green;
       }
-      cells[y * width + x] = bead;
+      cells[row * width + column] = bead;
     }
   }
 
@@ -57,6 +58,5 @@ export function createDemoPattern(palette: BeadColor[]): PatternResult {
     },
     warnings: [],
   };
-  return recalculatePattern(base, palette, DEFAULT_SETTINGS);
+  return recalculatePattern(base, palette, settings);
 }
-

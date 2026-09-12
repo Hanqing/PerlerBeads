@@ -36,14 +36,16 @@ export function recalculatePattern(
       ...pattern.metrics,
       totalBeads: pattern.cells.filter((cell) => cell !== null).length,
       colorCount: usage.length,
+      boardSize: settings.boardSize,
       boardsAcross: Math.ceil(pattern.width / settings.boardSize),
       boardsDown: Math.ceil(pattern.height / settings.boardSize),
       physicalWidthMm: pattern.width * settings.beadPitchMm,
       physicalHeightMm: pattern.height * settings.beadPitchMm,
     },
-    warnings: usage
+    // Inventory warnings are derived; retain engine/calibration warnings across edits.
+    warnings: [...pattern.warnings.filter((warning) => !/库存不足.*颗|^当前启用颜色总库存还缺 \d+ 颗$/.test(warning)), ...usage
       .filter((entry) => entry.shortage > 0)
-      .map((entry) => `${palette[entry.paletteIndex].code} ${palette[entry.paletteIndex].name} 库存不足 ${entry.shortage} 颗`),
+      .map((entry) => `${palette[entry.paletteIndex].code} ${palette[entry.paletteIndex].name} 库存不足 ${entry.shortage} 颗`)],
   };
 }
 
@@ -137,4 +139,3 @@ export function countBoardColor(
   }
   return count;
 }
-

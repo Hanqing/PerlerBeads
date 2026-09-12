@@ -128,7 +128,6 @@ async function generateBrowserPreview(
       meanDeltaE: 0,
       isolatedBeads: 0,
     },
-    warnings: ["当前为浏览器预览算法；桌面应用会使用 Rust CIEDE2000 生成核心。"],
+    warnings: ["浏览器仅预览配色，不执行库存替代、抖动与清理。请在桌面应用中生成最终图纸。"],
   }, palette, settings);
 }
-
