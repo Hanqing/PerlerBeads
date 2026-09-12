@@ -12,7 +12,7 @@ export const DEVICE_PROFILES: DeviceProfile[] = [
     boardSize: 29,
     linkable: false,
     sourceKind: "reference",
-    note: "refs 照片可确认大方板工作流，但无法数清格数或识别品牌；先按常见 29 × 29 建模，打印前必须实测。",
+    note: "现有设备的品牌与钉数尚未确认。暂按常见 29 × 29 配置，打印前请实测并校准。",
   },
   {
     id: "hama-midi-29",
@@ -84,8 +84,12 @@ export function applyDeviceProfile(
   settings: GenerationSettings,
   profile: DeviceProfile,
 ): GenerationSettings {
-  const horizontalBoards = Math.max(1, Math.round(settings.width / settings.boardSize));
-  const verticalBoards = Math.max(1, Math.round(settings.height / settings.boardSize));
+  const maxBoards = Math.floor(300 / profile.boardSize);
+  const safeBoardCount = (size: number) => Math.min(maxBoards, Math.max(1,
+    Math.round((Number.isFinite(size) ? size : profile.boardSize) / Math.max(1, settings.boardSize)),
+  ));
+  const horizontalBoards = safeBoardCount(settings.width);
+  const verticalBoards = safeBoardCount(settings.height);
   return {
     ...settings,
     width: profile.boardSize * horizontalBoards,

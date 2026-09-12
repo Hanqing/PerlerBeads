@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
-import type { BeadColor, PatternResult } from "../types";
+import { useEffect, useRef, useState } from "react";
+import type { BeadColor, CellLabelMode, PatternResult } from "../types";
 import { boardOrigin } from "../lib/pattern";
+import { readableInk, symbolFor } from "../lib/export";
 
 interface BoardCanvasProps {
   pattern: PatternResult;
@@ -8,151 +9,126 @@ interface BoardCanvasProps {
   boardIndex: number;
   selectedColor: number | null;
   completed: Set<number>;
-  mode: "build" | "edit";
+  mode: "build" | "edit" | "view";
+  showLabels: boolean;
+  labelMode: CellLabelMode;
   onCellClick: (globalIndex: number) => void;
 }
 
-export function BoardCanvas({
-  pattern,
-  palette,
-  boardIndex,
-  selectedColor,
-  completed,
-  mode,
-  onCellClick,
-}: BoardCanvasProps) {
+const PADDING = 30;
+
+export function BoardCanvas({ pattern, palette, boardIndex, selectedColor, completed, mode, showLabels, labelMode, onCellClick }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cursor, setCursor] = useState<[number, number] | null>(null);
+  const { boardSize, boardsAcross } = pattern.metrics;
+  const { startX, startY } = boardOrigin(boardIndex, boardsAcross, boardSize);
+  useEffect(() => setCursor(null), [boardIndex]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const draw = () => {
-      const bounds = canvas.getBoundingClientRect();
-      const size = Math.max(320, Math.floor(Math.min(bounds.width, bounds.height || bounds.width)));
+      const size = canvas.getBoundingClientRect().width;
+      if (size <= PADDING * 2) return;
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(size * dpr);
-      canvas.height = Math.floor(size * dpr);
-      canvas.style.height = `${size}px`;
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.clearRect(0, 0, size, size);
-      context.fillStyle = "#111819";
-      context.fillRect(0, 0, size, size);
-
-      const padding = 32;
-      const boardSize = pattern.metrics.boardSize;
-      const cellSize = (size - padding * 2) / boardSize;
-      const boardPixelSize = cellSize * boardSize;
-      const { startX, startY } = boardOrigin(
-        boardIndex,
-        pattern.metrics.boardsAcross,
-        boardSize,
-      );
-      context.fillStyle = "#39423f";
-      context.fillRect(padding, padding, boardPixelSize, boardPixelSize);
-
-      context.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillStyle = "#9aa7a3";
-      for (let value = 0; value < boardSize; value += 1) {
-        if (value === 0 || (value + 1) % 5 === 0 || value === boardSize - 1) {
-          const center = padding + value * cellSize + cellSize / 2;
-          context.fillText(String(startX + value + 1).padStart(2, "0"), center, 17);
-          context.fillText(String(startY + value + 1).padStart(2, "0"), 16, center);
-        }
-      }
-
-      for (let localY = 0; localY < boardSize; localY += 1) {
-        for (let localX = 0; localX < boardSize; localX += 1) {
-          const globalX = startX + localX;
-          const globalY = startY + localY;
-          const px = padding + localX * cellSize;
-          const py = padding + localY * cellSize;
-          const inPattern = globalX < pattern.width && globalY < pattern.height;
-          const globalIndex = globalY * pattern.width + globalX;
-          const paletteIndex = inPattern ? pattern.cells[globalIndex] : null;
-
-          context.fillStyle = "#444d4a";
-          context.fillRect(px + 0.4, py + 0.4, cellSize - 0.8, cellSize - 0.8);
-          if (paletteIndex === null) {
-            context.beginPath();
-            context.arc(px + cellSize / 2, py + cellSize / 2, Math.max(1, cellSize * 0.09), 0, Math.PI * 2);
-            context.fillStyle = "#2a3331";
-            context.fill();
-            continue;
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = "#f3efe4"; ctx.fillRect(0, 0, size, size);
+      const cell = (size - PADDING * 2) / boardSize;
+      const orders = new Map(pattern.selectedPaletteIndices.map((index, order) => [index, order]));
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      for (let y = 0; y < boardSize; y++) {
+        for (let x = 0; x < boardSize; x++) {
+          const px = PADDING + (x + .5) * cell;
+          const py = PADDING + (y + .5) * cell;
+          const index = (startY + y) * pattern.width + startX + x;
+          if (startX + x >= pattern.width || startY + y >= pattern.height) continue;
+          const colorIndex = pattern.cells[index];
+          if (colorIndex === null) {
+            ctx.beginPath(); ctx.arc(px, py, Math.max(.6, cell * .08), 0, Math.PI * 2);
+            ctx.fillStyle = "#cecabb"; ctx.fill(); continue;
           }
-          const dimmed = selectedColor !== null && paletteIndex !== selectedColor;
-          context.globalAlpha = dimmed ? 0.15 : completed.has(globalIndex) ? 0.42 : 1;
-          context.fillStyle = palette[paletteIndex].hex;
-          context.fillRect(px + 0.9, py + 0.9, cellSize - 1.8, cellSize - 1.8);
-          context.globalAlpha = 1;
-          if (paletteIndex === selectedColor) {
-            context.strokeStyle = "#ffd05c";
-            context.lineWidth = Math.max(1, cellSize * 0.12);
-            context.strokeRect(px + 1.2, py + 1.2, cellSize - 2.4, cellSize - 2.4);
+          const color = palette[colorIndex];
+          const done = completed.has(index);
+          ctx.globalAlpha = selectedColor !== null && selectedColor !== colorIndex ? .18 : done ? .48 : 1;
+          ctx.fillStyle = color.hex;
+          if (showLabels) {
+            ctx.fillRect(px - cell / 2 + .4, py - cell / 2 + .4, cell - .8, cell - .8);
+            ctx.fillStyle = readableInk(color);
+            const label = labelMode === "code" ? color.code : symbolFor(orders.get(colorIndex) ?? 0);
+            ctx.font = "600 " + Math.min(10, cell / (label.length > 2 ? 2.05 : 1.6)) + "px ui-monospace, monospace";
+            ctx.fillText(label, px, py);
+          } else {
+            const radius = cell * .44;
+            ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = "#30291b22"; ctx.lineWidth = .7; ctx.stroke();
+            ctx.beginPath(); ctx.arc(px, py - radius * .07, radius * .72, Math.PI * 1.15, Math.PI * 1.85);
+            ctx.strokeStyle = "#ffffff66"; ctx.stroke();
+            ctx.beginPath(); ctx.arc(px, py, cell * .135, 0, Math.PI * 2);
+            ctx.fillStyle = "#433d3290"; ctx.fill();
           }
-          if (completed.has(globalIndex)) {
-            context.strokeStyle = "rgba(230, 243, 238, .52)";
-            context.lineWidth = 1;
-            context.beginPath();
-            context.moveTo(px + cellSize * 0.22, py + cellSize * 0.52);
-            context.lineTo(px + cellSize * 0.43, py + cellSize * 0.72);
-            context.lineTo(px + cellSize * 0.78, py + cellSize * 0.27);
-            context.stroke();
+          ctx.globalAlpha = 1;
+          if (done) {
+            ctx.beginPath(); ctx.moveTo(px - cell * .22, py); ctx.lineTo(px - cell * .04, py + cell * .2); ctx.lineTo(px + cell * .25, py - cell * .22);
+            ctx.strokeStyle = "#174638"; ctx.lineWidth = Math.max(1.4, cell * .08); ctx.stroke();
           }
         }
       }
-
-      context.strokeStyle = "#71807b";
-      context.lineWidth = 0.7;
-      for (let line = 0; line <= boardSize; line += 1) {
-        const offset = padding + line * cellSize;
-        context.beginPath();
-        context.moveTo(padding, offset);
-        context.lineTo(padding + boardPixelSize, offset);
-        context.moveTo(offset, padding);
-        context.lineTo(offset, padding + boardPixelSize);
-        context.stroke();
+      ctx.strokeStyle = "#b5b09e66"; ctx.lineWidth = .6; ctx.setLineDash([2, 3]);
+      for (let line = 5; line < boardSize; line += 5) {
+        const offset = PADDING + line * cell;
+        ctx.beginPath(); ctx.moveTo(PADDING, offset); ctx.lineTo(size - PADDING, offset);
+        ctx.moveTo(offset, PADDING); ctx.lineTo(offset, size - PADDING); ctx.stroke();
       }
-      context.strokeStyle = "#b6c2be";
-      context.lineWidth = 2;
-      context.strokeRect(padding, padding, boardPixelSize, boardPixelSize);
+      ctx.setLineDash([]); ctx.strokeStyle = "#beb9a7";
+      ctx.strokeRect(PADDING, PADDING, size - PADDING * 2, size - PADDING * 2);
+      ctx.fillStyle = "#6f7060"; ctx.font = "10px ui-monospace, monospace";
+      for (let value = 0; value < boardSize; value++) {
+        if (value !== 0 && (value + 1) % 5 !== 0 && value !== boardSize - 1) continue;
+        const center = PADDING + (value + .5) * cell;
+        ctx.fillText(String(startX + value + 1), center, 15); ctx.fillText(String(startX + value + 1), center, size - 14);
+        ctx.fillText(String(startY + value + 1), 14, center); ctx.fillText(String(startY + value + 1), size - 14, center);
+      }
+      if (cursor) {
+        ctx.strokeStyle = "#147353"; ctx.lineWidth = 2;
+        ctx.strokeRect(PADDING + cursor[0] * cell, PADDING + cursor[1] * cell, cell, cell);
+      }
     };
     draw();
-    const observer = new ResizeObserver(draw);
-    observer.observe(canvas);
+    const observer = new ResizeObserver(draw); observer.observe(canvas);
     return () => observer.disconnect();
-  }, [boardIndex, completed, palette, pattern, selectedColor]);
+  }, [boardSize, completed, cursor, labelMode, palette, pattern, selectedColor, showLabels, startX, startY]);
 
-  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const bounds = canvas.getBoundingClientRect();
-    const size = Math.min(bounds.width, bounds.height);
-    const padding = 32;
-    const boardSize = pattern.metrics.boardSize;
-    const cellSize = (size - padding * 2) / boardSize;
-    const localX = Math.floor((event.clientX - bounds.left - padding) / cellSize);
-    const localY = Math.floor((event.clientY - bounds.top - padding) / cellSize);
-    if (localX < 0 || localY < 0 || localX >= boardSize || localY >= boardSize) return;
-    const { startX, startY } = boardOrigin(boardIndex, pattern.metrics.boardsAcross, boardSize);
-    const globalX = startX + localX;
-    const globalY = startY + localY;
-    if (globalX >= pattern.width || globalY >= pattern.height) return;
-    const globalIndex = globalY * pattern.width + globalX;
-    if (mode === "build" && pattern.cells[globalIndex] === null) return;
-    onCellClick(globalIndex);
+  const hitTest = (event: React.MouseEvent<HTMLCanvasElement>): [number, number] | null => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const cell = (bounds.width - PADDING * 2) / boardSize;
+    const x = Math.floor((event.clientX - bounds.left - PADDING) / cell);
+    const y = Math.floor((event.clientY - bounds.top - PADDING) / cell);
+    return x >= 0 && y >= 0 && x < boardSize && y < boardSize && startX + x < pattern.width && startY + y < pattern.height ? [x, y] : null;
   };
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="board-canvas"
-      onClick={handleClick}
-      aria-label={mode === "build" ? "拼豆摆放板；点击格子标记完成" : "拼豆编辑板；点击格子替换颜色"}
-    />
-  );
+  const activate = (point: [number, number] | null) => {
+    if (!point || mode === "view") return;
+    const index = (startY + point[1]) * pattern.width + startX + point[0];
+    if (mode === "build" && pattern.cells[index] === null) return;
+    onCellClick(index);
+  };
+  const cursorColor = cursor ? pattern.cells[(startY + cursor[1]) * pattern.width + startX + cursor[0]] : null;
+  return <div className="canvas-wrap">
+    <canvas ref={canvasRef} className="board-canvas" tabIndex={0}
+      aria-label={mode === "edit" ? "拼豆编辑板；方向键移动，回车上色" : mode === "build" ? "拼豆摆放板；方向键移动，回车标记完成" : "拼豆图纸预览"}
+      onMouseMove={(event) => { const next = hitTest(event); if (next?.[0] !== cursor?.[0] || next?.[1] !== cursor?.[1]) setCursor(next); }}
+      onMouseLeave={() => setCursor(null)} onClick={(event) => activate(hitTest(event))}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(cursor); return; }
+        const directions: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+        const step = directions[event.key];
+        if (!step) return;
+        event.preventDefault();
+        setCursor((current) => current ? [Math.max(0, Math.min(Math.min(boardSize, pattern.width - startX) - 1, current[0] + step[0])), Math.max(0, Math.min(Math.min(boardSize, pattern.height - startY) - 1, current[1] + step[1]))] : [0, 0]);
+      }} />
+    <div className="canvas-caption">{cursor ? `X ${startX + cursor[0] + 1} · Y ${startY + cursor[1] + 1}　${cursorColor === null ? "空格" : palette[cursorColor].code + " " + palette[cursorColor].name}` : mode === "edit" ? "选择颜色，点击格子上色 · 支持撤销 / 重做" : mode === "build" ? "点击拼豆标记完成 · 每 5 格一条辅助线" : "图纸预览 · 切换到摆放或编辑模式开始操作"}</div>
+  </div>;
 }
-
