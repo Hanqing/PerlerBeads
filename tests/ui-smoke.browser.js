@@ -1,0 +1,77 @@
+// Run with a fresh browser page at the local app: browse eval tests/ui-smoke.browser.js
+return await (async () => {
+  const passed = [];
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 70));
+  const check = (condition, message) => { if (!condition) throw new Error(message); passed.push(message); };
+  const element = (selector) => { const node = document.querySelector(selector); if (!node) throw new Error("Missing " + selector); return node; };
+  const click = async (selector) => { element(selector).click(); await tick(); };
+  const label = (name) => `[aria-label="${name}"]`;
+  const change = async (selector, value) => {
+    const node = element(selector);
+    Object.getOwnPropertyDescriptor(node.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value").set.call(node, value);
+    node.dispatchEvent(new Event(node.tagName === "SELECT" ? "change" : "input", { bubbles: true })); await tick();
+  };
+  const keyboard = async (key) => { element(".board-canvas").dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })); await tick(); };
+  const metric = () => element(".project-metrics").textContent;
+  const upload = async (file) => {
+    const transfer = new DataTransfer(); transfer.items.add(file);
+    element('input[type="file"]').files = transfer.files;
+    element('input[type="file"]').dispatchEvent(new Event("change", { bubbles: true }));
+    for (let tries = 0; tries < 80; tries++) { await tick(); if (!document.querySelector(".busy-overlay")) break; }
+  };
+  check(element(label("保存项目 JSON")).disabled, "empty project disables exports");
+  await click(".welcome .text-button");
+  check(metric().includes("1,441"), "demo generates expected bead count");
+  await click(".focus-button");
+  check(element(".focus-button").getAttribute("aria-pressed") === "true", "focus toggle enables");
+  await click(".focus-button");
+  check(element(".focus-button").getAttribute("aria-pressed") === "false", "focus toggle disables");
+  await click(label("前往板 B2"));
+  check(element(".board-toolbar > strong").textContent.includes("B2"), "overview navigates to B2");
+  await click(label("前往板 A1"));
+  await click(label("材料库存"));
+  await change(label("S10 库存"), "0");
+  await click(label("摆放模式"));
+  check(element(".inspector .warning-panel").textContent.includes("593"), "inventory edit immediately updates shortage");
+  await click(label("材料库存")); await change(label("S10 库存"), "700"); await click(label("摆放模式"));
+  check(!document.querySelector(".inspector .warning-panel"), "restored inventory removes stale shortage");
+  await click(label("编辑图案"));
+  check(document.querySelectorAll(".palette-button").length === 24, "editor exposes all active colors");
+  await click('.palette-button[aria-label^="S24 "]');
+  await keyboard("ArrowRight"); await keyboard("ArrowRight"); await keyboard("Enter");
+  check(metric().includes("1,442"), "keyboard painting fills an empty cell");
+  await click(label("撤销")); check(metric().includes("1,441"), "undo restores bead count");
+  await click(label("重做")); check(metric().includes("1,442"), "redo restores edit");
+  await click(label("撤销"));
+  await click(label("摆放模式")); await keyboard("ArrowLeft"); await keyboard("Enter");
+  check(element("progress").value === 1, "keyboard construction marks bead completed");
+  await click(label("编辑图案")); await click('.palette-button[aria-label^="S24 "]'); await keyboard("Enter");
+  check(element("progress").value === 0, "recolor clears old completion marker");
+  await click(label("撤销")); check(element("progress").value === 1, "undo restores original completion marker");
+  await click(label("项目与生成")); await keyboard("Enter");
+  check(element("progress").value === 1, "project preview cannot mutate construction progress");
+  await change(label("画板缩放"), "2");
+  check(element(".board-stage").classList.contains("is-zoomed"), "canvas zoom is available");
+  await change(label("画板缩放"), "1");
+  await click(label("使用帮助")); check(element("dialog").open, "help opens a modal dialog"); await click(label("关闭帮助"));
+  const before = element(label("项目名称")).value;
+  await upload(new File(["not an image"], "broken.png", { type: "image/png" }));
+  check(element(label("项目名称")).value === before && metric().includes("1,441"), "failed import preserves original project");
+  await click(".error-toast button");
+  const canvas = document.createElement("canvas"); canvas.width = 58; canvas.height = 58;
+  const ctx = canvas.getContext("2d"); ctx.fillStyle = "#E58B4F";
+  for (let y = 0; y < 58; y += 2) for (let x = 0; x < 58; x += 2) ctx.fillRect(x, y, 1, 1);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+  await upload(new File([blob], "isolated-regions.png", { type: "image/png" }));
+  check(document.querySelectorAll(".region-row").length === 225, "all 225 isolated regions remain accessible");
+  check([...document.querySelectorAll(".inspector .warning-panel")].some((node) => node.textContent.includes("浏览器仅预览")), "browser engine limitation survives recalculation");
+  await click(".region-row:last-child input");
+  check(element("progress").value === 1, "last region beyond initial eight is actionable");
+  await upload(new File([blob], "isolated-regions.png", { type: "image/png" }));
+  check(element("progress").value === 0, "same image can be imported again");
+  const rect = element(".canvas-wrap").getBoundingClientRect();
+  const stage = element(".board-stage").getBoundingClientRect();
+  check(rect.top >= stage.top && rect.bottom <= stage.bottom, "board and caption fit in viewport");
+  check(document.documentElement.scrollWidth <= innerWidth, "no horizontal window overflow");
+  return { passed: passed.length, checks: passed };
+})()
